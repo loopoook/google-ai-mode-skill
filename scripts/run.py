@@ -9,6 +9,11 @@ import sys
 import subprocess
 from pathlib import Path
 
+# Fix Windows GBK encoding issue with emoji characters
+if sys.stdout.encoding and sys.stdout.encoding.lower() in ('gbk', 'gb2312', 'cp936'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+if sys.stderr.encoding and sys.stderr.encoding.lower() in ('gbk', 'gb2312', 'cp936'):
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
 def get_venv_python():
     """Get the virtual environment Python executable"""
