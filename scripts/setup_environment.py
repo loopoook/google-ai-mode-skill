@@ -10,6 +10,12 @@ import subprocess
 import venv
 from pathlib import Path
 
+# Fix Windows GBK encoding issue with emoji characters
+if sys.stdout.encoding and sys.stdout.encoding.lower() in ('gbk', 'gb2312', 'cp936'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+if sys.stderr.encoding and sys.stderr.encoding.lower() in ('gbk', 'gb2312', 'cp936'):
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
 
 class SkillEnvironment:
     """Manages skill-specific virtual environment"""
@@ -50,20 +56,27 @@ class SkillEnvironment:
         if self.requirements_file.exists():
             print("📦 Installing dependencies...")
             try:
-                # Upgrade pip first
-                subprocess.run(
-                    [str(self.venv_pip), "install", "--upgrade", "pip"],
-                    check=True,
-                    capture_output=True,
-                    text=True
-                )
+                # Upgrade pip first (soft failure — don't abort if upgrade fails)
+                try:
+                    subprocess.run(
+                        [str(self.venv_pip), "install", "--upgrade", "pip"],
+                        check=True,
+                        capture_output=True,
+                        text=True,
+                        encoding='utf-8',
+                        errors='replace'
+                    )
+                except subprocess.CalledProcessError:
+                    print("⚠️ pip upgrade skipped (already up-to-date or network issue)")
 
                 # Install requirements
                 result = subprocess.run(
                     [str(self.venv_pip), "install", "-r", str(self.requirements_file)],
                     check=True,
                     capture_output=True,
-                    text=True
+                    text=True,
+                    encoding='utf-8',
+                    errors='replace'
                 )
                 print("✅ Dependencies installed")
 
@@ -76,7 +89,9 @@ class SkillEnvironment:
                         [str(self.venv_python), "-m", "patchright", "install", "chrome"],
                         check=True,
                         capture_output=True,
-                        text=True
+                        text=True,
+                        encoding='utf-8',
+                        errors='replace'
                     )
                     print("✅ Chrome installed")
                 except subprocess.CalledProcessError as e:
